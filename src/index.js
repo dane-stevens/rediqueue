@@ -4,11 +4,21 @@ const { nanoid } = require('nanoid')
 
 class RediQueue {
 
-    constructor(queue, redisConnection, opts = {}) {
+    constructor(queue, redisConnection = {}, opts = {}) {
+
+        let host = '127.0.0.1'
+        let port = 6379
+        let password = ''
+        if (redisConnection.redis) {
+            host = redisConnection.redis.host
+            port = redisConnection.redis.port
+            password = redisConnection.redis.password
+        }
+
         this.client = new Redis({
-            host: '127.0.0.1',
-            port: 6379,
-            password: '',
+            host,
+            port,
+            password,
             connectionName: `rediqueue:${ (process.env.NODE_ENV || 'development') }:${ nanoid() }`
         })
         this.queue = (opts.prefix || 'rediqueue') + ':' + (process.env.NODE_ENV || 'development') + ':' + queue
