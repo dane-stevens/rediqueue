@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./assets/rediQueueLogo.png" alt="RediQueue" />
+    <img src="https://skyf4ll.nyc3.cdn.digitaloceanspaces.com/npm/rediQueue.png" alt="RediQueue" />
     <br/>
     <p>
         The simple message queue built on Redis Streams.
