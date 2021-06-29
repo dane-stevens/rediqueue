@@ -26,6 +26,10 @@ Coming soon...
 npm install rediqueue
 ```
 
+### Get a FREE Redis Instance
+
+[Redis Cloud](https://redislabs.com/redis-enterprise-cloud/overview/)
+
 ## Contributing
 
 We welcome all types of contributions, either code fixes, new features or doc improvements.
