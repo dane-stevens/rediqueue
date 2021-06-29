@@ -46,26 +46,15 @@ test('ADD to queue', async () => {
 
 })
 
-test('PROCESS queue ', async () => {
+// test('PROCESS queue ', async () => {
 
-    await queue.process('default', (job) => {
-        console.log('JOB DATA----',job)
-        return new Error('WHOAH!!')
-        return 'DONE'
-    })
+//     await queue.process('default', (job) => {
+//         console.log('JOB DATA----',job)
+//         return new Error('WHOAH!!')
+//         return 'DONE'
+//     })
 
-    // const key = 'test:set'
-
-    // for (let i = 0; i < 100; i++) {
-    //     redisClient.sadd(key, i)
-    // }
-
-    // const results = await redisClient.sscan(key, [0, 'COUNT', 10]);
+//     expect(1).toEqual(1);
 
 
-
-
-    expect(1).toEqual(1);
-
-
-});
+// });
