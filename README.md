@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./assets/rediQueue.png?v=2" alt="RediQueue" />
+    <img src="./assets/rediQueueLogo.png" alt="RediQueue" />
     <br/>
     <br/>
     <p>
