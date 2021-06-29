@@ -1,6 +1,6 @@
 {
   "name": "rediqueue",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A robust message queue for node.js built with redis streams",
   "main": "index.js",
   "scripts": {
