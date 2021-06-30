@@ -8,6 +8,7 @@ beforeAll(() => {
 
 afterAll(() => {
     queue.client.quit()
+    queue.consumerClient.quit()
 })
 
 // test('FETCH PENDING', async () => {
