@@ -1,4 +1,4 @@
-const RediQueue = require('./index.js')
+const RediQueue = require('../index.js')
 
 
 const queue = new RediQueue('ingest', 'localhost:6379', {

@@ -14,3 +14,12 @@ queue.process('default', async (job) => {
     }
 
 })
+
+let n = 0
+
+setInterval(() => {
+    if (n < 5) {
+        queue.add({ n })
+        n = n + 1
+    }
+}, 1000)

@@ -21,9 +21,16 @@ class RediQueue {
             password,
             connectionName: `rediqueue:${ (process.env.NODE_ENV || 'development') }:${ nanoid() }`
         })
+        this.consumerClient = new Redis({
+            host,
+            port,
+            password,
+            connectionName: `rediqueue:${ (process.env.NODE_ENV || 'development') }:${ nanoid() }`
+        })
         this.queue = (opts.prefix || 'rediqueue') + ':' + (process.env.NODE_ENV || 'development') + ':' + queue
         this.opts = opts
         this.consumerGroupExists = false
+        this.blockMillis = 1000
         // XGROUP CREATE queuename groupname $ MKSTREAM
     }
 
@@ -60,10 +67,11 @@ RediQueue.prototype.add = function (data) {
 RediQueue.prototype.process = async function (consumerGroupName, result) {
 
     let restarted = true
+    let blockMillis = 1000
 
     if (!this.consumerGroupExists) {
         try {
-            const res = await this.client.xgroup('CREATE', this.queue, consumerGroupName, '0')
+            const res = await this.consumerClient.xgroup('CREATE', this.queue, consumerGroupName, '0')
             console.log('CREATING GROUP',res)
             this.consumerGroupExists = true 
         }
@@ -74,14 +82,21 @@ RediQueue.prototype.process = async function (consumerGroupName, result) {
         }
     }
 
-    for (let i = 0; i < 1; i--) {
+    for (let i = 0; i < 1;) {
 
-        const consumer = await this.client.xreadgroup('GROUP', consumerGroupName, 'consumer1', 'COUNT', 1, 'BLOCK', '1000', 'STREAMS', this.queue, restarted ? '0' : '>')
+        const consumer = await this.consumerClient.xreadgroup('GROUP', consumerGroupName, 'consumer1', 'COUNT', 1, 'BLOCK', `${ blockMillis }`, 'STREAMS', this.queue, restarted ? '0' : '>')
         
         if (consumer === null) {
             // return i = 2
-            console.log('Waiting for jobs...')
+            console.log('Waiting for jobs...', blockMillis, i)
+            i = i - 1
+            if (i === -4) blockMillis = 5000
+            if (i === -9) blockMillis = 10000
+            if (i === -49) blockMillis = 60000
             // return null
+        } else {
+            i = 0
+            blockMillis = 1000
         }
 
         if (consumer !== null) {
@@ -95,7 +110,7 @@ RediQueue.prototype.process = async function (consumerGroupName, result) {
 
                 const [[ jobId, data ]] = jobs
 
-                const pipeline = this.client.pipeline()
+                const pipeline = this.consumerClient.pipeline()
 
                 try {
 

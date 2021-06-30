@@ -12,6 +12,8 @@
 
 Coming soon...
 
+[Request beta access](https://cdn.forms-content.sg-form.com/8e4ae6f6-2a8a-11eb-a1d1-4e330953a988)
+
 ### RediQueue Features
 
 - [x] Robust design based on Redis Streams
