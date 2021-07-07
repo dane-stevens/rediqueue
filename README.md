@@ -12,7 +12,7 @@
 
 Coming soon...
 
-[Request beta access](https://cdn.forms-content.sg-form.com/8e4ae6f6-2a8a-11eb-a1d1-4e330953a988)
+[Request beta access](https://forms.gle/3G1YofLxrbLDhf4G6)
 
 ### RediQueue Features
 
