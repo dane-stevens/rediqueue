@@ -3,3 +3,4 @@ container.sh
 .env
 .env*
 src/test
+.github
