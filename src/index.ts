@@ -18,6 +18,8 @@ interface QueueOpts {
 
 declare global {
   var __rediQueueConnection: RedisClientType | undefined;
+  var __rediQueueClientConnected: Boolean | undefined;
+  var __rediQueueConsumerClientConnected: Boolean | undefined;
 }
 
 class RediQueue {
@@ -71,8 +73,24 @@ class RediQueue {
 
     this.consumerClient = this.client.duplicate();
 
-    this.client.connect();
-    this.consumerClient.connect();
+    if (process.env.NODE_ENV === "production") {
+      this.client.connect();
+      this.consumerClient.connect();
+    } else {
+      if (!global.__rediQueueClientConnected) {
+        this.client.connect();
+      }
+      if (!global.__rediQueueConsumerClientConnected) {
+        this.consumerClient.connect();
+      }
+
+      this.client.on("ready", () => {
+        global.__rediQueueClientConnected = true;
+      });
+      this.consumerClient.on("ready", () => {
+        global.__rediQueueConsumerClientConnected = true;
+      });
+    }
 
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
     this.opts = opts;
