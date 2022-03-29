@@ -68,11 +68,12 @@ class RediQueue {
           })}`,
         });
       }
+      this.client = global.__rediQueueConnection;
+
       if (!global.__rediQueueConsumerConnection) {
         global.__rediQueueConsumerConnection = this.consumerClient =
           this.client.duplicate();
       }
-      this.client = global.__rediQueueConnection;
       this.consumerClient = global.__rediQueueConsumerConnection;
     }
 
