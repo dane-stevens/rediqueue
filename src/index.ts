@@ -93,23 +93,23 @@ class RediQueue {
 
     this.consumerClient.on(
       "connect",
-      () => (global.__rediQueueClientConnected = false)
+      () => (global.__rediQueueConsumerClientConnected = false)
     );
     this.consumerClient.on(
       "ready",
-      () => (global.__rediQueueClientConnected = true)
+      () => (global.__rediQueueConsumerClientConnected = true)
     );
     this.consumerClient.on(
       "end",
-      () => (global.__rediQueueClientConnected = false)
+      () => (global.__rediQueueConsumerClientConnected = false)
     );
     this.consumerClient.on(
       "error",
-      () => (global.__rediQueueClientConnected = false)
+      () => (global.__rediQueueConsumerClientConnected = false)
     );
     this.consumerClient.on(
       "reconnecting",
-      () => (global.__rediQueueClientConnected = false)
+      () => (global.__rediQueueConsumerClientConnected = false)
     );
 
     if (!global.__rediQueueClientConnected) {
