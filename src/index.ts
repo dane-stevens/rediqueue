@@ -18,8 +18,7 @@ interface QueueOpts {
 
 declare global {
   var __rediQueueConnection: RedisClientType | undefined;
-  var __rediQueueClientConnected: Boolean | undefined;
-  var __rediQueueConsumerClientConnected: Boolean | undefined;
+  var __rediQueueConsumerConnection: RedisClientType | undefined;
 }
 
 class RediQueue {
@@ -54,6 +53,7 @@ class RediQueue {
           capitalize: false,
         })}`,
       });
+      this.consumerClient = this.client.duplicate();
     } else {
       if (!global.__rediQueueConnection) {
         global.__rediQueueConnection = createClient({
@@ -68,10 +68,13 @@ class RediQueue {
           })}`,
         });
       }
+      if (!global.__rediQueueConsumerConnection) {
+        global.__rediQueueConsumerConnection = this.consumerClient =
+          this.client.duplicate();
+      }
       this.client = global.__rediQueueConnection;
+      this.consumerClient = global.__rediQueueConsumerConnection;
     }
-
-    this.consumerClient = this.client.duplicate();
 
     this.client.connect();
     this.consumerClient.connect();
