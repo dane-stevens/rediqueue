@@ -2,5 +2,5 @@ node_modules
 container.sh
 .env
 .env*
-src/test
+src
 .github
