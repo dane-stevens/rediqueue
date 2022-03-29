@@ -54,6 +54,10 @@ class RediQueue {
           capitalize: false,
         })}`,
       });
+      this.consumerClient = this.client.duplicate();
+
+      this.client.connect();
+      this.consumerClient.connect();
     } else {
       if (!global.__rediQueueConnection) {
         global.__rediQueueConnection = createClient({
@@ -69,27 +73,10 @@ class RediQueue {
         });
       }
       this.client = global.__rediQueueConnection;
-    }
+      this.consumerClient = this.client.duplicate();
 
-    this.consumerClient = this.client.duplicate();
-
-    if (process.env.NODE_ENV === "production") {
       this.client.connect();
       this.consumerClient.connect();
-    } else {
-      if (!global.__rediQueueClientConnected) {
-        this.client.connect();
-      }
-      if (!global.__rediQueueConsumerClientConnected) {
-        this.consumerClient.connect();
-      }
-
-      this.client.on("ready", () => {
-        global.__rediQueueClientConnected = true;
-      });
-      this.consumerClient.on("ready", () => {
-        global.__rediQueueConsumerClientConnected = true;
-      });
     }
 
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
