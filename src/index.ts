@@ -1,6 +1,7 @@
 require("dotenv").config();
 import { createClient } from "redis";
 import humanId from "human-id";
+import { RedisClientType } from "@node-redis/client";
 
 interface RedisConnection {
   redis?: {
@@ -13,6 +14,10 @@ interface RedisConnection {
 interface QueueOpts {
   prefix?: string;
   env?: "test" | "development" | "staging" | "production";
+}
+
+declare global {
+  var __rediQueueConnection: RedisClientType | undefined;
 }
 
 class RediQueue {
@@ -33,31 +38,42 @@ class RediQueue {
 
     this.env = opts?.env || process.env.NODE_ENV || "development";
 
-    console.log(this.opts, this.env);
-    this.client = createClient({
-      socket: {
-        host,
-        port,
-      },
-      password,
-      name: `rediqueue:${this.env}:${humanId({
-        separator: "-",
-        capitalize: false,
-      })}`,
-    });
+    this.client;
+
+    if (process.env.NODE_ENV === "production") {
+      this.client = createClient({
+        socket: {
+          host,
+          port,
+        },
+        password,
+        name: `rediqueue:${this.env}:${humanId({
+          separator: "-",
+          capitalize: false,
+        })}`,
+      });
+    } else {
+      if (!global.__rediQueueConnection) {
+        global.__rediQueueConnection = createClient({
+          socket: {
+            host,
+            port,
+          },
+          password,
+          name: `rediqueue:${this.env}:${humanId({
+            separator: "-",
+            capitalize: false,
+          })}`,
+        });
+      }
+      this.client = global.__rediQueueConnection;
+    }
+
+    this.consumerClient = this.client.duplicate();
+
     this.client.connect();
-    this.consumerClient = createClient({
-      socket: {
-        host,
-        port,
-      },
-      password,
-      name: `rediqueue:${this.env}:${humanId({
-        separator: "-",
-        capitalize: false,
-      })}`,
-    });
     this.consumerClient.connect();
+
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
     this.opts = opts;
     this.consumerGroupExists = false;
