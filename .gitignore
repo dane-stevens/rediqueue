@@ -2,3 +2,4 @@ node_modules
 container.sh
 .env
 .env*
+/lib
