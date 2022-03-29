@@ -151,7 +151,8 @@ RediQueue.prototype.add = function (data) {
 };
 
 RediQueue.prototype.process = async function (consumerGroupName, result) {
-  const consumerId = humanId({ separator: "-", capitalize: false });
+  //   const consumerId = humanId({ separator: "-", capitalize: false });
+  const consumerId = "default";
   let restarted = true;
   let blockMillis = 1000;
 
