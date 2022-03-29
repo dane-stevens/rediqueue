@@ -54,10 +54,6 @@ class RediQueue {
           capitalize: false,
         })}`,
       });
-      this.consumerClient = this.client.duplicate();
-
-      this.client.connect();
-      this.consumerClient.connect();
     } else {
       if (!global.__rediQueueConnection) {
         global.__rediQueueConnection = createClient({
@@ -73,11 +69,12 @@ class RediQueue {
         });
       }
       this.client = global.__rediQueueConnection;
-      this.consumerClient = this.client.duplicate();
-
-      this.client.connect();
-      this.consumerClient.connect();
     }
+
+    this.consumerClient = this.client.duplicate();
+
+    this.client.connect();
+    this.consumerClient.connect();
 
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
     this.opts = opts;
