@@ -171,6 +171,8 @@ RediQueue.prototype.process = async function (consumerGroupName, result) {
     }
   }
 
+  console.log("CONSUMER GROUP", consumerGroupName, consumerId);
+
   for (let i = 0; i < 1; ) {
     const consumer = await this.consumerClient.xReadGroup(
       consumerGroupName,
