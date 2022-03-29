@@ -19,6 +19,8 @@ interface QueueOpts {
 declare global {
   var __rediQueueConnection: RedisClientType | undefined;
   var __rediQueueConsumerConnection: RedisClientType | undefined;
+  var __rediQueueClientConnected: Boolean | undefined;
+  var __rediQueueConsumerClientConnected: Boolean | undefined;
 }
 
 class RediQueue {
@@ -77,8 +79,45 @@ class RediQueue {
       this.consumerClient = global.__rediQueueConsumerConnection;
     }
 
-    this.client.connect();
-    this.consumerClient.connect();
+    this.client.on(
+      "connect",
+      () => (global.__rediQueueClientConnected = false)
+    );
+    this.client.on("ready", () => (global.__rediQueueClientConnected = true));
+    this.client.on("end", () => (global.__rediQueueClientConnected = false));
+    this.client.on("error", () => (global.__rediQueueClientConnected = false));
+    this.client.on(
+      "reconnecting",
+      () => (global.__rediQueueClientConnected = false)
+    );
+
+    this.consumerClient.on(
+      "connect",
+      () => (global.__rediQueueClientConnected = false)
+    );
+    this.consumerClient.on(
+      "ready",
+      () => (global.__rediQueueClientConnected = true)
+    );
+    this.consumerClient.on(
+      "end",
+      () => (global.__rediQueueClientConnected = false)
+    );
+    this.consumerClient.on(
+      "error",
+      () => (global.__rediQueueClientConnected = false)
+    );
+    this.consumerClient.on(
+      "reconnecting",
+      () => (global.__rediQueueClientConnected = false)
+    );
+
+    if (!global.__rediQueueClientConnected) {
+      this.client.connect();
+    }
+    if (!global.__rediQueueConsumerClientConnected) {
+      this.consumerClient.connect();
+    }
 
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
     this.opts = opts;
