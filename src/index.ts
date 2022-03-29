@@ -114,9 +114,11 @@ class RediQueue {
 
     if (!global.__rediQueueClientConnected) {
       this.client.connect();
+      global.__rediQueueClientConnected = true;
     }
     if (!global.__rediQueueConsumerClientConnected) {
       this.consumerClient.connect();
+      global.__rediQueueConsumerClientConnected = true;
     }
 
     this.queue = (opts.prefix || "rediqueue") + ":" + this.env + ":" + queue;
