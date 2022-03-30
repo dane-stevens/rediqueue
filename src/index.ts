@@ -177,124 +177,128 @@ RediQueue.prototype.process = async function (consumerGroupName, result) {
   console.log("CONSUMER GROUP", consumerGroupName, consumerId);
 
   for (let i = 0; i < 1; ) {
-    const consumer = await this.consumerClient.xReadGroup(
-      consumerGroupName,
-      consumerId,
-      { key: this.queue, id: restarted ? "0" : ">" },
-      {
-        BLOCK: blockMillis,
-        COUNT: 1,
-      }
-    );
+    try {
+      const consumer = await this.consumerClient.xReadGroup(
+        consumerGroupName,
+        consumerId,
+        { key: this.queue, id: restarted ? "0" : ">" },
+        {
+          BLOCK: blockMillis,
+          COUNT: 1,
+        }
+      );
 
-    // console.log(consumer);
-    // return null;
+      // console.log(consumer);
+      // return null;
 
-    // const consumer = await this.consumerClient.XREADGROUP(
-    //   "GROUP",
-    //   consumerGroupName,
-    //   "consumer1",
-    //   "COUNT",
-    //   1,
-    //   "BLOCK",
-    //   `${blockMillis}`,
-    //   "STREAMS",
-    //   this.queue,
-    //   restarted ? "0" : ">"
-    // );
+      // const consumer = await this.consumerClient.XREADGROUP(
+      //   "GROUP",
+      //   consumerGroupName,
+      //   "consumer1",
+      //   "COUNT",
+      //   1,
+      //   "BLOCK",
+      //   `${blockMillis}`,
+      //   "STREAMS",
+      //   this.queue,
+      //   restarted ? "0" : ">"
+      // );
 
-    if (consumer === null) {
-      console.log("Waiting for jobs...", blockMillis, i);
-      i = i - 1;
-      if (i === -4) blockMillis = 5000;
-      if (i === -9) blockMillis = 10000;
-      if (i === -49) blockMillis = 60000;
+      if (consumer === null) {
+        console.log("Waiting for jobs...", blockMillis, i);
+        i = i - 1;
+        if (i === -4) blockMillis = 5000;
+        if (i === -9) blockMillis = 10000;
+        if (i === -49) blockMillis = 60000;
 
-      //   NEED TO CLAIM MESSAGES FOR STUCK CONSUMERS
+        //   NEED TO CLAIM MESSAGES FOR STUCK CONSUMERS
 
-      if (process.env.NODE_ENV === "test") return null;
-    } else {
-      i = 0;
-      blockMillis = 1000;
-    }
-
-    if (consumer !== null) {
-      const [{ name, messages }] = consumer;
-
-      //   console.log(messages);
-      //   return null;
-      //   let jobs;
-
-      if (messages.length < 1) {
-        restarted = false;
+        if (process.env.NODE_ENV === "test") return null;
       } else {
-        const [{ id: jobId, message }] = messages;
+        i = 0;
+        blockMillis = 1000;
+      }
 
-        const data = JSON.parse(message.data);
+      if (consumer !== null) {
+        const [{ name, messages }] = consumer;
 
-        const processPipeline = [];
-        try {
-          const processingResult = await result({
-            data,
-          });
+        //   console.log(messages);
+        //   return null;
+        //   let jobs;
 
-          if (
-            typeof processingResult === "object" &&
-            processingResult.name === "Error"
-          )
-            throw new Error(processingResult.message);
+        if (messages.length < 1) {
+          restarted = false;
+        } else {
+          const [{ id: jobId, message }] = messages;
 
-          processPipeline.push(
-            this.consumerClient.xAdd(`${this.queue}:completed`, "*", {
-              consumer: consumerId,
-              data: JSON.stringify(data),
-              result: JSON.stringify(processingResult),
-            })
-          );
-          processPipeline.push(
-            this.consumerClient.hIncrBy(
-              `${this.queue}:counters`,
-              "completedJobs",
-              1
+          const data = JSON.parse(message.data);
+
+          const processPipeline = [];
+          try {
+            const processingResult = await result({
+              data,
+            });
+
+            if (
+              typeof processingResult === "object" &&
+              processingResult.name === "Error"
             )
-          );
-        } catch (err) {
-          processPipeline.push(
-            this.consumerClient.xAdd(
-              `${this.queue}:failed`,
-              "*",
-              {
+              throw new Error(processingResult.message);
+
+            processPipeline.push(
+              this.consumerClient.xAdd(`${this.queue}:completed`, "*", {
+                consumer: consumerId,
                 data: JSON.stringify(data),
-                error: JSON.stringify({
-                  name: err.name,
-                  message: err.message,
-                  stack: err.stack,
-                }),
-              }
-              //   {
-              //     TRIM: {
-              //       strategy: "MAXLEN",
-              //       strategyModifier: "~",
-              //       threshold: this.opts.maxLength,
-              //     },
-              //   }
-            )
-          );
-          processPipeline.push(
-            this.consumerClient.hIncrBy(
-              `${this.queue}:counters`,
-              "failedJobs",
-              1
-            )
-          );
-        } finally {
-          // Acknowledge the job
-          //   processPipeline.push(
-          //     this.consumerClient.xAck(this.queue, consumerGroupName, jobId)
-          //   );
-          await Promise.all(processPipeline);
+                result: JSON.stringify(processingResult),
+              })
+            );
+            processPipeline.push(
+              this.consumerClient.hIncrBy(
+                `${this.queue}:counters`,
+                "completedJobs",
+                1
+              )
+            );
+          } catch (err) {
+            processPipeline.push(
+              this.consumerClient.xAdd(
+                `${this.queue}:failed`,
+                "*",
+                {
+                  data: JSON.stringify(data),
+                  error: JSON.stringify({
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                  }),
+                }
+                //   {
+                //     TRIM: {
+                //       strategy: "MAXLEN",
+                //       strategyModifier: "~",
+                //       threshold: this.opts.maxLength,
+                //     },
+                //   }
+              )
+            );
+            processPipeline.push(
+              this.consumerClient.hIncrBy(
+                `${this.queue}:counters`,
+                "failedJobs",
+                1
+              )
+            );
+          } finally {
+            // Acknowledge the job
+            //   processPipeline.push(
+            //     this.consumerClient.xAck(this.queue, consumerGroupName, jobId)
+            //   );
+            await Promise.all(processPipeline);
+          }
         }
       }
+    } catch (err) {
+      console.log(err);
     }
   }
 
